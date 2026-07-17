@@ -83,6 +83,7 @@ _Briefly explain the steps to get your project running on a local machine._
    ```
 3. Create a `.env` file in `backend/` with your API keys. The voice assistant requires a Groq key:
    ```
+   GEMINI_API_KEY=your_gemini_api_key
    GROQ_API_KEY=your_groq_api_key
    ```
    (Add a Gemini key if you use the product image extraction feature.)
