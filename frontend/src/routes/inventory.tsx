@@ -4,10 +4,11 @@ import { InventoryView } from "@/components/views/inventory-view";
 import { useApp } from "@/store/app-context";
 
 function InventoryPage() {
-  const { inventory, stagedProducts, activeStagedIdx, scanning, setActiveStagedIdx, triggerBatchScan, updateStagedField, commitBatch, discardBatch, openEditProduct } = useApp();
+  const { inventoryLoading, inventory, stagedProducts, activeStagedIdx, scanning, setActiveStagedIdx, triggerBatchScan, updateStagedField, commitBatch, discardBatch, openEditProduct } = useApp();
 
   return (
     <InventoryView
+      loading={inventoryLoading}
       inventory={inventory}
       stagedProducts={stagedProducts}
       activeStagedIdx={activeStagedIdx}

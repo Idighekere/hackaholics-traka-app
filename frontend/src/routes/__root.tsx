@@ -34,7 +34,9 @@ function RootLayout() {
   useEffect(() => {
     const onUnauthorized = () => {
       setAuthenticated(false);
-      navigate({ to: "/auth", replace: true });
+      if (location.pathname !== "/") {
+        navigate({ to: "/auth", replace: true });
+      }
     };
     window.addEventListener("traka:unauthorized", onUnauthorized);
     return () => window.removeEventListener("traka:unauthorized", onUnauthorized);

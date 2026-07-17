@@ -1,8 +1,10 @@
 import { UserPlus, CheckCircle, HandCoins, Check, Package } from "@phosphor-icons/react";
 import type { DebtorEntry } from "@/store/types";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DebtorsViewProps {
+  loading?: boolean;
   debtors: DebtorEntry[];
   onOpenLogDebt: () => void;
   onCollectDebt: (id: string) => void;
@@ -10,6 +12,7 @@ interface DebtorsViewProps {
 }
 
 export function DebtorsView({
+  loading,
   debtors,
   onOpenLogDebt,
   onCollectDebt,
@@ -43,7 +46,26 @@ export function DebtorsView({
           Active Unpaid Balances
         </h4>
         <div className="space-y-3">
-          {debtors.length === 0 ? (
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border bg-card p-3.5 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                  <Skeleton className="h-10 rounded-lg" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 flex-1 rounded-lg" />
+                    <Skeleton className="h-8 flex-1 rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : debtors.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
               <CheckCircle weight="fill" className="mx-auto mb-1 block h-5 w-5 text-primary" />
               No outstanding customer credit records found!

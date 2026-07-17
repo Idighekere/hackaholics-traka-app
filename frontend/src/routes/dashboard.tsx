@@ -4,11 +4,12 @@ import { DashboardView } from "@/components/views/dashboard-view";
 import { useApp } from "@/store/app-context";
 
 function DashboardPage() {
-  const { revenue, profit, totalDebt, unpaidDebtorCount, lowStockCount, inventory, accountName, accountNumber, openIncomingTransfer, setActiveModal, addStagedProduct } = useApp();
+  const { dashboardLoading, revenue, profit, totalDebt, unpaidDebtorCount, lowStockCount, inventory, accountName, accountNumber, openIncomingTransfer, setActiveModal, addStagedProduct } = useApp();
   const navigate = useNavigate();
 
   return (
     <DashboardView
+      loading={dashboardLoading}
       revenue={revenue}
       profit={profit}
       totalDebt={totalDebt}

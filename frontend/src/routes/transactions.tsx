@@ -4,10 +4,10 @@ import { TransactionsView } from "@/components/views/transactions-view";
 import { useTransactions } from "@/lib/query-hooks";
 
 function TransactionsPage() {
-  const { data: transactions } = useTransactions();
+  const { data: transactions, isLoading } = useTransactions();
 
   return (
-    <TransactionsView transactions={transactions ?? []} />
+    <TransactionsView loading={isLoading} transactions={transactions ?? []} />
   );
 }
 

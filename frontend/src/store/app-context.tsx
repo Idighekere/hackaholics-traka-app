@@ -16,8 +16,11 @@ interface AppContextValue {
   totalDebt: number;
   unpaidDebtorCount: number;
   lowStockCount: number;
+  inventoryLoading: boolean;
   inventory: InventoryItem[];
+  debtorsLoading: boolean;
   debtors: DebtorEntry[];
+  dashboardLoading: boolean;
   paidDebts: PaidDebt[];
   stagedProducts: StagedProduct[];
   activeStagedIdx: number;
@@ -69,9 +72,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   const { data: meData, isError: meError } = useMe(authenticated);
-  const { data: inventoryData } = useInventory(authenticated);
-  const { data: debtorsData } = useDebtors(authenticated);
-  const { data: dashboardData } = useDashboard(authenticated);
+  const { data: inventoryData, isLoading: inventoryLoading } = useInventory(authenticated);
+  const { data: debtorsData, isLoading: debtorsLoading } = useDebtors(authenticated);
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboard(authenticated);
 
   useEffect(() => {
     if (meError) setAuthenticated(false);
@@ -453,7 +456,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider value={{
       authenticated, accountName, accountNumber, bankName, revenue, profit,
       totalDebt, unpaidDebtorCount, lowStockCount,
-      inventory, debtors, paidDebts, stagedProducts,
+      inventoryLoading, inventory, debtorsLoading, debtors, dashboardLoading, paidDebts, stagedProducts,
       activeStagedIdx, scanning, chatLogs, chatAudioUrls, aiChips, aiLang, aiLoading, activeModal,
       incomingTransferAmount, incomingTransferSender, incomingTransferBank,
       settleTarget, collectTarget, editTarget,

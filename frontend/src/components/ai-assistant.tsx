@@ -44,6 +44,7 @@ export function AiAssistant({
   aiLoading,
   chips,
   chatLogs,
+  chatAudioUrls,
   onSubmitQuery,
   onSubmitVoice,
 }: AiAssistantProps) {

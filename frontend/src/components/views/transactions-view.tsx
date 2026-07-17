@@ -1,7 +1,9 @@
 import { ArrowsLeftRight, CircleNotch } from "@phosphor-icons/react";
 import type { UnallocatedTransactionResponse } from "@/lib/endpoints";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TransactionsViewProps {
+  loading?: boolean;
   transactions: UnallocatedTransactionResponse[];
 }
 
@@ -21,7 +23,7 @@ function formatDateTime(iso: string) {
   return d.toLocaleDateString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-export function TransactionsView({ transactions }: TransactionsViewProps) {
+export function TransactionsView({ loading, transactions }: TransactionsViewProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-gradient-to-br from-primary/5 to-card p-4">
@@ -41,7 +43,22 @@ export function TransactionsView({ transactions }: TransactionsViewProps) {
           Recent Activity
         </h4>
         <div className="space-y-2">
-          {transactions.length === 0 ? (
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border bg-card p-3.5 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-40" />
+                    </div>
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              ))}
+            </div>
+          ) : transactions.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-8 text-center">
               <CircleNotch weight="duotone" className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
               <p className="text-xs font-semibold text-muted-foreground">No transactions yet</p>

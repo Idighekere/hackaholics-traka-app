@@ -11,8 +11,10 @@ import { cn } from "@/lib/utils";
 import type { InventoryItem, StagedProduct } from "@/store/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface InventoryViewProps {
+  loading?: boolean;
   inventory: InventoryItem[];
   stagedProducts: StagedProduct[];
   activeStagedIdx: number;
@@ -26,6 +28,7 @@ interface InventoryViewProps {
 }
 
 export function InventoryView({
+  loading,
   inventory,
   stagedProducts,
   activeStagedIdx,
@@ -168,7 +171,23 @@ export function InventoryView({
           ALL ACTIVE INVENTORY PRODUCTS
         </h4>
         <div className="space-y-2.5">
-          {inventory.map((item) => {
+          {loading ? (
+            <>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5">
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-3 w-32" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-3 w-14" />
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                  <Skeleton className="ml-2 h-8 w-8 rounded-lg" />
+                </div>
+              ))}
+            </>
+          ) : inventory.map((item) => {
             const isAiParsed = item.name.startsWith("AI Parsed");
             return (
               <div

@@ -4,10 +4,11 @@ import { DebtorsView } from "@/components/views/debtors-view";
 import { useApp } from "@/store/app-context";
 
 function DebtorsPage() {
-  const { debtors, openSettleConfirm, openCollectDebt, setActiveModal } = useApp();
+  const { debtorsLoading, debtors, openSettleConfirm, openCollectDebt, setActiveModal } = useApp();
 
   return (
     <DebtorsView
+      loading={debtorsLoading}
       debtors={debtors}
       onOpenLogDebt={() => setActiveModal("log-debt")}
       onCollectDebt={openCollectDebt}

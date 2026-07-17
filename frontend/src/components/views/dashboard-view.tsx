@@ -10,11 +10,13 @@ import {
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingEmptyState } from "@/components/views/onboarding-empty-state";
 import type { InventoryItem } from "@/store/types";
 import { useState } from "react";
 
 interface DashboardViewProps {
+  loading?: boolean;
   revenue: number;
   profit: number;
   totalDebt: number;
@@ -30,6 +32,7 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({
+  loading,
   revenue,
   profit,
   totalDebt,
@@ -85,7 +88,44 @@ export function DashboardView({
         </div>
       </div>
 
-      {inventory.length === 0 ? (
+      {loading ? (
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-7 w-28" />
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-7 w-28" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-7 w-28" />
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-7 w-28" />
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border bg-card/40 p-4 space-y-3">
+            <Skeleton className="h-3 w-44" />
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-24 rounded-xl" />
+              <Skeleton className="h-24 rounded-xl" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-40" />
+            <div className="space-y-2">
+              <Skeleton className="h-14 rounded-xl" />
+              <Skeleton className="h-14 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      ) : inventory.length === 0 ? (
         <OnboardingEmptyState onAddProduct={onAddProduct} />
       ) : (
         <>
