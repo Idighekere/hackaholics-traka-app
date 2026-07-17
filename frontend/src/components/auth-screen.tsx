@@ -1,7 +1,6 @@
 import { ChartLineUp, Lock, Phone, Storefront, Fingerprint } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PinInput } from "@/components/pin-input";
 import { useState } from "react";
 import { accountsApi } from "@/lib/endpoints";
 import { useToast } from "@/components/ui/toast";
@@ -118,7 +117,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
         <Button
           variant="ghost"
           onClick={() => onSetAuthTab("signup")}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex-1 cursor-pointer rounded-lg py-3 text-sm font-medium transition-all ${
             authTab === "signup"
               ? "bg-card text-primary"
               : "text-muted-foreground"
@@ -129,7 +128,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
         <Button
           variant="ghost"
           onClick={() => onSetAuthTab("login")}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex-1 cursor-pointer rounded-lg py-3 text-sm font-medium transition-all ${
             authTab === "login"
               ? "bg-card text-primary"
               : "text-muted-foreground"
@@ -174,14 +173,23 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
             />
           </Field>
           <Field label="Create PIN" icon={Lock}>
-            <PinInput value={signupPin} onChange={setSignupPin} />
+            <Input
+              type="password"
+              inputMode="numeric"
+              autoComplete="new-password"
+              placeholder="6-digit PIN"
+              maxLength={6}
+              value={signupPin}
+              onChange={(e) => setSignupPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
+            />
           </Field>
           {error && <p className="text-center text-xs font-medium text-destructive">{error}</p>}
           <Button
             variant="default"
             onClick={handleSignup}
             disabled={!canSignup || loading}
-            className="mt-2 w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
+            className="mt-2 w-full cursor-pointer rounded-xl bg-primary px-4 py-4 font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
           >
             {loading ? "Creating Account..." : "Create My Traka Account"}
           </Button>
@@ -203,14 +211,23 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
             />
           </Field>
           <Field label="PIN" icon={Lock}>
-            <PinInput value={loginPin} onChange={setLoginPin} />
+            <Input
+              type="password"
+              inputMode="numeric"
+              autoComplete="current-password"
+              placeholder="6-digit PIN"
+              maxLength={6}
+              value={loginPin}
+              onChange={(e) => setLoginPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
+            />
           </Field>
           {error && <p className="text-center text-xs font-medium text-destructive">{error}</p>}
           <Button
             variant="default"
             onClick={handleLogin}
             disabled={!canLogin || loading}
-            className="mt-2 w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
+            className="mt-2 w-full cursor-pointer rounded-xl bg-primary px-4 py-4 font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
           >
             {loading ? "Logging In..." : "Log In to My Account"}
           </Button>
