@@ -35,16 +35,11 @@ class ReconcileRequest(BaseModel):
 
 class UnallocatedTransactionResponse(BaseModel):
     id: int
-    reference: Optional[str] = None
-    sender_name: Optional[str] = None
-    amount: float
-    channel: Optional[str] = None
+    reference: Optional[str]
+    sender_name: Optional[str]      # shown as "from Chinedu Okafor"
+    amount: float                   # shown as ₦amount
+    channel: Optional[str]
     status: str
-    title: Optional[str] = None
-    details: Optional[str] = None
-    profit: Optional[float] = None
-    payment_method: Optional[str] = None
-    transaction_type: Optional[str] = None
     created_at: datetime
 
     class Config:
