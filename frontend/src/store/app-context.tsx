@@ -32,6 +32,7 @@ interface AppContextValue {
   incomingTransferBank: string;
   settleTarget: DebtorEntry | null;
   collectTarget: DebtorEntry | null;
+  editTarget: InventoryItem | null;
   setAuthenticated: (v: boolean) => void;
   setActiveStagedIdx: (v: number) => void;
   setAiLang: (v: AiLanguage) => void;
@@ -47,6 +48,7 @@ interface AppContextValue {
   openSettleConfirm: (id: string) => void;
   openCollectDebt: (id: string) => void;
   openIncomingTransfer: () => void;
+  openEditProduct: (item: InventoryItem) => void;
   receiveIncomingTransfer: (payload: { amount: number; sender: string; bank: string }) => void;
   triggerBatchScan: (files: FileList | null) => void;
   addStagedProduct: (name?: string) => void;
@@ -143,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [incomingTransferBank, setIncomingTransferBank] = useState("");
   const [settleTarget, setSettleTarget] = useState<DebtorEntry | null>(null);
   const [collectTarget, setCollectTarget] = useState<DebtorEntry | null>(null);
+  const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
 
   const pushNotification = useCallback((title: string, desc: string, _type: Notification["type"]) => {
     toast({ title, description: desc, variant: "default" as const });
@@ -257,6 +260,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [debtors]);
 
+  const openEditProduct = useCallback((item: InventoryItem) => {
+    setEditTarget(item);
+    setActiveModal("edit-product");
+  }, []);
+
   const openIncomingTransfer = useCallback(() => {
     if (inventory.length === 0) return;
     const idx = Math.floor(Math.random() * inventory.length);
@@ -287,6 +295,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIncomingTransferBank("");
     setSettleTarget(null);
     setCollectTarget(null);
+    setEditTarget(null);
   }, []);
 
   const triggerBatchScan = useCallback(async (_files: FileList | null) => {
@@ -441,13 +450,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       inventory, debtors, paidDebts, stagedProducts,
       activeStagedIdx, scanning, chatLogs, aiChips, aiLang, aiLoading, activeModal,
       incomingTransferAmount, incomingTransferSender, incomingTransferBank,
-      settleTarget, collectTarget,
+      settleTarget, collectTarget, editTarget,
       setAuthenticated, setActiveStagedIdx, setAiLang, setActiveModal, closeModal,
       pushNotification, handleAuth, simulateTransfer, manualCashSale, processTransfer,
       logDebt, settleDebt, openSettleConfirm, openCollectDebt, openIncomingTransfer,
       receiveIncomingTransfer,
       triggerBatchScan, addStagedProduct, updateStagedField,
-      commitBatch, discardBatch, submitAiQuery, submitAiVoice,
+      commitBatch, discardBatch, openEditProduct,
+      submitAiQuery, submitAiVoice,
     }}>
       {children}
     </AppContext.Provider>
