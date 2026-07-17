@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import type { InventoryItem, DebtorEntry, DebtorItem, PaidDebt, Notification, StagedProduct, ModalId } from "./types";
 import { debtorsApi, inventoryApi, voiceApi, type AiLanguage } from "@/lib/endpoints";
+import { getErrorMessage } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import { useInventory, useDebtors, useNotifications, useWeeklyReport, useMe } from "@/lib/query-hooks";
 
@@ -23,6 +24,8 @@ interface AppContextValue {
   aiLoading: boolean;
   activeModal: ModalId;
   incomingTransferAmount: number;
+  incomingTransferSender: string;
+  incomingTransferBank: string;
   settleTarget: DebtorEntry | null;
   collectTarget: DebtorEntry | null;
   setAuthenticated: (v: boolean) => void;
@@ -40,7 +43,9 @@ interface AppContextValue {
   openSettleConfirm: (id: number) => void;
   openCollectDebt: (id: number) => void;
   openIncomingTransfer: () => void;
+  receiveIncomingTransfer: (payload: { amount: number; sender: string; bank: string }) => void;
   triggerBatchScan: (files: FileList | null) => void;
+  addStagedProduct: (name?: string) => void;
   updateStagedField: (idx: number, field: keyof StagedProduct, value: string | number) => void;
   commitBatch: () => void;
   discardBatch: () => void;
@@ -56,11 +61,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return !!localStorage.getItem("traka_user");
   });
 
-  const { data: meData } = useMe();
+  const { data: meData, isError: meError } = useMe(authenticated);
   const { data: inventoryData } = useInventory();
   const { data: debtorsData } = useDebtors();
   const { data: notificationsData } = useNotifications();
   const { data: weeklyData } = useWeeklyReport();
+
+  useEffect(() => {
+    if (meError) setAuthenticated(false);
+  }, [meError]);
+
+  useEffect(() => {
+    const onUnauthorized = () => setAuthenticated(false);
+    window.addEventListener("traka:unauthorized", onUnauthorized);
+    return () => window.removeEventListener("traka:unauthorized", onUnauthorized);
+  }, []);
 
   const accountName = meData?.business_name ?? "";
   const accountNumber = meData?.virtual_account_number ?? "";
@@ -116,11 +131,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [stagedProducts, setStagedProducts] = useState<StagedProduct[]>([]);
   const [activeStagedIdx, setActiveStagedIdx] = useState(0);
   const [chatLogs, setChatLogs] = useState<string[]>([]);
-  const [aiChips] = useState<string[]>(["Who is owing me?", "Who paid last?", "Inventory Summary"]);
   const [aiLang, setAiLang] = useState<AiLanguage>("en");
+  const aiChips = useMemo<string[]>(() => {
+    const map: Record<AiLanguage, string[]> = {
+      en: ["Who is owing me?", "How much profit today?", "Inventory Summary"],
+      yo: ["Ta l'o je mi?", "Elo ni ere mi loni?", "Akojopo oja"],
+      ha: ["Wane ne yake bina?", "Nawa riba a yau?", "Takaitaccen kaya"],
+      pidgin: ["Who dey owe me?", "How much profit I make today?", "Inventory wey remain"],
+    };
+    return map[aiLang] ?? map.en;
+  }, [aiLang]);
   const [aiLoading, setAiLoading] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalId>(null);
   const [incomingTransferAmount, setIncomingTransferAmount] = useState(0);
+  const [incomingTransferSender, setIncomingTransferSender] = useState("");
+  const [incomingTransferBank, setIncomingTransferBank] = useState("");
   const [settleTarget, setSettleTarget] = useState<DebtorEntry | null>(null);
   const [collectTarget, setCollectTarget] = useState<DebtorEntry | null>(null);
 
@@ -153,11 +178,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { api } = await import("@/lib/api");
     try {
       await api.post("/transactions/cash-sale", {
-        product_id: String(prodId),
-        quantity: qty,
+        sender_name: "Cash",
+        items: [{ product_id: String(prodId), quantity: qty }],
       });
-    } catch {
-      toast({ title: "Sale Failed", description: "Could not record cash sale with server. Saved locally.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Sale Failed", description: getErrorMessage(err, "Could not record cash sale with server. Saved locally."), variant: "destructive" });
     }
     setInventory((prev) => {
       const item = prev.find((i) => i.id === prodId);
@@ -173,11 +198,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { api } = await import("@/lib/api");
     try {
       await api.post("/transactions/cash-sale", {
-        product_id: String(prodId),
-        quantity: qty,
+        sender_name: incomingTransferSender || "Transfer",
+        items: [{ product_id: String(prodId), quantity: qty }],
       });
-    } catch {
-      toast({ title: "Transfer Failed", description: "Could not record transfer with server. Saved locally.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Transfer Failed", description: getErrorMessage(err, "Could not record transfer with server. Saved locally."), variant: "destructive" });
     }
     setInventory((prev) => {
       const item = prev.find((i) => i.id === prodId);
@@ -187,7 +212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         i.id === prodId ? { ...i, qty: i.qty - qty } : i,
       );
     });
-  }, [pushNotification, toast]);
+  }, [incomingTransferSender, pushNotification, toast]);
 
   const logDebt = useCallback(async (name: string, amount: number, date: string, items: DebtorItem[]) => {
     try {
@@ -201,8 +226,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           price: i.price,
         })),
       });
-    } catch {
-      toast({ title: "Debt Log Failed", description: "Could not save debt to server. Saved locally.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Debt Log Failed", description: getErrorMessage(err, "Could not save debt to server. Saved locally."), variant: "destructive" });
     }
     setDebtors((prev) => [...prev, { id: Date.now(), name, amount, date, items }]);
     pushNotification("Credit Logged", `Logged ₦${amount} pending payment debt balance for ${name}.`, "credit");
@@ -211,8 +236,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const settleDebt = useCallback(async (id: number) => {
     try {
       await debtorsApi.settle(String(id), { payment_method: "CASH" });
-    } catch {
-      toast({ title: "Settlement Failed", description: "Could not record settlement with server. Saved locally.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Settlement Failed", description: getErrorMessage(err, "Could not record settlement with server. Saved locally."), variant: "destructive" });
     }
     setDebtors((prev) => {
       const target = prev.find((d) => d.id === id);
@@ -246,13 +271,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!item) return;
     const multipliers = [1, 2, 3, 5];
     const m = multipliers[Math.floor(Math.random() * multipliers.length)] ?? 1;
+    setIncomingTransferSender("");
+    setIncomingTransferBank("");
     setIncomingTransferAmount(item.selling * m);
     setActiveModal("incoming-transfer");
   }, [inventory]);
 
+  const receiveIncomingTransfer = useCallback(
+    ({ amount, sender, bank }: { amount: number; sender: string; bank: string }) => {
+      setIncomingTransferSender(sender);
+      setIncomingTransferBank(bank);
+      setIncomingTransferAmount(amount);
+      setActiveModal("incoming-transfer");
+    },
+    [],
+  );
+
   const closeModal = useCallback(() => {
     setActiveModal(null);
     setIncomingTransferAmount(0);
+    setIncomingTransferSender("");
+    setIncomingTransferBank("");
     setSettleTarget(null);
     setCollectTarget(null);
   }, []);
@@ -272,6 +311,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveStagedIdx(0);
   }, [pushNotification]);
 
+  const addStagedProduct = useCallback((name = "") => {
+    const placeholderImg = "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=150&auto=format&fit=crop&q=60";
+    const idx = stagedProducts.length;
+    setStagedProducts((prev) => [
+      ...prev,
+      { name, qty: 1, cost: 0, selling: 0, img: placeholderImg },
+    ]);
+    setActiveStagedIdx(idx);
+  }, [stagedProducts]);
+
   const updateStagedField = useCallback((idx: number, field: keyof StagedProduct, value: string | number) => {
     setStagedProducts((prev) =>
       prev.map((p, i) => (i === idx ? { ...p, [field]: value } : p)),
@@ -289,8 +338,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           quantity: s.qty,
         });
       }
-    } catch {
-      toast({ title: "Batch Save Failed", description: "Could not save products to server. Saved locally.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Batch Save Failed", description: getErrorMessage(err, "Could not save products to server. Saved locally."), variant: "destructive" });
     }
     setInventory((prev) => {
       const maxId = prev.reduce((m, i) => Math.max(m, i.id), 0);
@@ -322,10 +371,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const res = await voiceApi.askText(q, aiLang);
       setChatLogs((prev) => [...prev, `bot:${res.reply}`]);
-    } catch {
+    } catch (err) {
       toast({
         title: "Assistant Unavailable",
-        description: "Could not reach the AI advisor. Please try again.",
+        description: getErrorMessage(err, "Could not reach the AI advisor. Please try again."),
         variant: "destructive",
       });
       setChatLogs((prev) => [
@@ -348,10 +397,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (["en", "yo", "ha", "pidgin"].includes(detected)) {
         setAiLang(detected);
       }
-    } catch {
+    } catch (err) {
       toast({
         title: "Voice Note Failed",
-        description: "Could not process the voice note. Please try again.",
+        description: getErrorMessage(err, "Could not process the voice note. Please try again."),
         variant: "destructive",
       });
       setChatLogs((prev) => [
@@ -368,11 +417,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       authenticated, accountName, accountNumber, bankName, revenue, profit,
       inventory, debtors, paidDebts, notifications, stagedProducts,
       activeStagedIdx, chatLogs, aiChips, aiLang, aiLoading, activeModal,
-      incomingTransferAmount, settleTarget, collectTarget,
+      incomingTransferAmount, incomingTransferSender, incomingTransferBank,
+      settleTarget, collectTarget,
       setAuthenticated, setActiveStagedIdx, setAiLang, setActiveModal, closeModal,
       pushNotification, handleAuth, simulateTransfer, manualCashSale, processTransfer,
       logDebt, settleDebt, openSettleConfirm, openCollectDebt, openIncomingTransfer,
-      triggerBatchScan, updateStagedField,
+      receiveIncomingTransfer,
+      triggerBatchScan, addStagedProduct, updateStagedField,
       commitBatch, discardBatch, submitAiQuery, submitAiVoice,
     }}>
       {children}

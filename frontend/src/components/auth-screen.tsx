@@ -1,8 +1,8 @@
-import { ChartLineUp, Lock, Phone, Storefront, Fingerprint } from "@phosphor-icons/react";
+import { ChartLineUp, Lock, Phone, Storefront, Fingerprint, ArrowRight, Eye, EyeSlash } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PinInput } from "@/components/pin-input";
 import { useState } from "react";
+import { cn, primaryCta, getErrorMessage } from "@/lib/utils";
 import { accountsApi } from "@/lib/endpoints";
 import { useToast } from "@/components/ui/toast";
 
@@ -22,9 +22,11 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
   const [loginPhone, setLoginPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showSignupPin, setShowSignupPin] = useState(false);
+  const [showLoginPin, setShowLoginPin] = useState(false);
 
   const isValidNigerianPhone = (p: string) => /^(07|08|09)\d{9}$/.test(p);
-  const canSignup = signupName.trim() && isValidNigerianPhone(signupPhone) && signupNin.length >= 11 && signupPin.length === 6;
+  const canSignup = signupName.trim() && isValidNigerianPhone(signupPhone) && signupNin.length === 11 && signupPin.length === 6;
   const canLogin = isValidNigerianPhone(loginPhone) && loginPin.length === 6;
 
   const handleSignup = async () => {
@@ -57,7 +59,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
       toast({ title: "Account Created", description: "Welcome to Traka! Setting up your ledger...", variant: "success" });
       onAuthenticate();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Signup failed. Please try again.";
+      const msg = getErrorMessage(err, "Signup failed. Please try again.");
       setError(msg);
       toast({ title: "Signup Failed", description: msg, variant: "destructive" });
     } finally {
@@ -91,7 +93,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
       toast({ title: "Welcome Back", description: "Logging into your ledger...", variant: "success" });
       onAuthenticate();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Login failed. Please try again.";
+      const msg = getErrorMessage(err, "Login failed. Please try again.");
       setError(msg);
       toast({ title: "Login Failed", description: msg, variant: "destructive" });
     } finally {
@@ -99,7 +101,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
     }
   };
   return (
-    <div className="flex flex-1 flex-col justify-center px-6">
+    <div className="flex flex-1 flex-col justify-center px-6 pt-16">
       {/* Brand */}
       <div className="mb-8 text-center">
         <div className="mx-auto mb-3 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-3xl text-primary">
@@ -118,7 +120,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
         <Button
           variant="ghost"
           onClick={() => onSetAuthTab("signup")}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex-1 cursor-pointer rounded-lg py-3 text-sm font-medium transition-all ${
             authTab === "signup"
               ? "bg-card text-primary"
               : "text-muted-foreground"
@@ -129,7 +131,7 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
         <Button
           variant="ghost"
           onClick={() => onSetAuthTab("login")}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 text-sm font-medium transition-all ${
+          className={`flex-1 cursor-pointer rounded-lg py-3 text-sm font-medium transition-all ${
             authTab === "login"
               ? "bg-card text-primary"
               : "text-muted-foreground"
@@ -154,9 +156,11 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
           <Field label="Phone Number" icon={Phone}>
             <Input
               type="tel"
+              inputMode="numeric"
               placeholder="08012345678"
+              maxLength={11}
               value={signupPhone}
-              onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => setSignupPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
             />
           </Field>
@@ -167,22 +171,42 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
               placeholder="11-digit NIN"
               maxLength={11}
               value={signupNin}
-              onChange={(e) => setSignupNin(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => setSignupNin(e.target.value.replace(/\D/g, "").slice(0, 11))}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
             />
           </Field>
           <Field label="Create PIN" icon={Lock}>
-            <PinInput value={signupPin} onChange={setSignupPin} />
+            <div className="relative">
+              <Input
+                type={showSignupPin ? "text" : "password"}
+                inputMode="numeric"
+                autoComplete="new-password"
+                placeholder="6-digit PIN"
+                maxLength={6}
+                value={signupPin}
+                onChange={(e) => setSignupPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 pr-11 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSignupPin((v) => !v)}
+                aria-label={showSignupPin ? "Hide PIN" : "Show PIN"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {showSignupPin ? <EyeSlash weight="bold" className="h-5 w-5" /> : <Eye weight="bold" className="h-5 w-5" />}
+              </button>
+            </div>
           </Field>
           {error && <p className="text-center text-xs font-medium text-destructive">{error}</p>}
-          <Button
-            variant="default"
+          <button
+            type="button"
             onClick={handleSignup}
             disabled={!canSignup || loading}
-            className="mt-2 w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
+            className={cn(primaryCta, "mt-2 w-full cursor-pointer disabled:opacity-40")}
           >
             {loading ? "Creating Account..." : "Create My Traka Account"}
-          </Button>
+            <ArrowRight weight="bold" className="h-4 w-4" />
+          </button>
         </div>
       )}
 
@@ -192,24 +216,46 @@ export function AuthScreen({ authTab, onSetAuthTab, onAuthenticate }: AuthScreen
           <Field label="Phone Number" icon={Phone}>
             <Input
               type="tel"
+              inputMode="numeric"
               placeholder="Enter your registered phone number"
+              maxLength={11}
               value={loginPhone}
-              onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
             />
           </Field>
           <Field label="PIN" icon={Lock}>
-            <PinInput value={loginPin} onChange={setLoginPin} />
+            <div className="relative">
+              <Input
+                type={showLoginPin ? "text" : "password"}
+                inputMode="numeric"
+                autoComplete="current-password"
+                placeholder="6-digit PIN"
+                maxLength={6}
+                value={loginPin}
+                onChange={(e) => setLoginPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 pr-11 text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowLoginPin((v) => !v)}
+                aria-label={showLoginPin ? "Hide PIN" : "Show PIN"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {showLoginPin ? <EyeSlash weight="bold" className="h-5 w-5" /> : <Eye weight="bold" className="h-5 w-5" />}
+              </button>
+            </div>
           </Field>
           {error && <p className="text-center text-xs font-medium text-destructive">{error}</p>}
-          <Button
-            variant="default"
+          <button
+            type="button"
             onClick={handleLogin}
             disabled={!canLogin || loading}
-            className="mt-2 w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-bold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-40"
+            className={cn(primaryCta, "mt-2 w-full cursor-pointer disabled:opacity-40")}
           >
             {loading ? "Logging In..." : "Log In to My Account"}
-          </Button>
+            <ArrowRight weight="bold" className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
