@@ -202,7 +202,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const logDebt = useCallback(async (name: string, amount: number, date: string, items: DebtorItem[]) => {
     try {
-      await debtorsApi.create({
+      const created = await debtorsApi.create({
         name,
         amount,
         items_summary: items.map((i) => `${i.qty}× ${i.product_name}`).join(", "),
@@ -212,10 +212,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           price: i.price,
         })),
       });
+      setDebtors((prev) => [...prev, { id: created.id, name, amount, date, items }]);
     } catch (err) {
       toast({ title: "Debt Log Failed", description: getErrorMessage(err, "Could not save debt to server. Saved locally."), variant: "destructive" });
+      setDebtors((prev) => [...prev, { id: String(Date.now()), name, amount, date, items }]);
     }
-    setDebtors((prev) => [...prev, { id: String(Date.now()), name, amount, date, items }]);
     pushNotification("Credit Logged", `Logged ₦${amount} pending payment debt balance for ${name}.`, "credit");
   }, [pushNotification, toast]);
 
