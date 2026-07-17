@@ -90,27 +90,56 @@ def delete_product(db: Session, product_id: str, account_id: str):
 
     return {"message": "Product deleted successfully"}
 
-def extract_product_from_images(image_bytes_list: List[bytes]) -> str:
+_SINGLE_PROMPT = (
+    "You are a Nigerian FMCG product identifier. "
+    "Look at this single product image carefully. "
+    "Return ONLY the full commercial product name including brand, variant, and size. "
+    "Examples: 'Peak Full Cream Milk Tin (400g)', 'Indomie Instant Noodles Chicken (70g)', "
+    "'Dangote Sugar (1kg)', 'Cowbell Chocolate Sachet (28g)'. "
+    "If you cannot clearly identify the product, return exactly: UNREADABLE"
+)
+
+_GEMINI_MODEL = 'gemini-3.5-flash'
+
+
+def _extract_single(img_bytes: bytes, mime_type: str):
+    """One Gemini call for one image. Returns product name string or None."""
+    response = client.models.generate_content(
+        model=_GEMINI_MODEL,
+        contents=[
+            _SINGLE_PROMPT,
+            types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
+        ]
+    )
+    result = response.text.strip()
+    return None if (not result or result.upper() == "UNREADABLE") else result
+
+
+def extract_product_from_images(
+    image_bytes_list: List[bytes],
+    mime_types: List[str] = None,
+) -> List[dict]:
+    """
+    One Gemini call per image — each image is identified independently.
+    Returns a list of { index, name } dicts, one per identified product.
+    """
     if not image_bytes_list:
-        return "Unknown Product"
-    
-    prompt = "Analyze these images and extract the standard product name, including brand and weight/volume if visible. Keep it concise and return ONLY the name. Example: 'Peak Milk Tin (400g)'"
-    
-    contents = [prompt]
-    for img_bytes in image_bytes_list:
-        contents.append(
-            types.Part.from_bytes(
-                data=img_bytes,
-                mime_type='image/jpeg'
-            )
+        raise HTTPException(status_code=400, detail="No images provided")
+
+    if not mime_types:
+        mime_types = ["image/jpeg"] * len(image_bytes_list)
+
+    results = []
+    for i, (img_bytes, mime) in enumerate(zip(image_bytes_list, mime_types)):
+        name = _extract_single(img_bytes, mime)
+        if name:
+            results.append({"index": i, "name": name})
+
+    if not results:
+        raise HTTPException(
+            status_code=422,
+            detail="Could not identify any product from the uploaded images. "
+                   "Try clearer photos showing the product labels directly."
         )
-    
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=contents
-        )
-        return response.text.strip()
-    except Exception as e:
-        print(f"Gemini API Error: {e}")
-        return "Unknown Product"
+
+    return results

@@ -30,4 +30,4 @@ class ProductResponse(BaseModel):
         from_attributes = True
 
 class ProductExtractionResponse(BaseModel):
-    name: str
+    names: list[str]

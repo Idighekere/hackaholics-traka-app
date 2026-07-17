@@ -40,11 +40,13 @@ async def extract_product(
         raise HTTPException(status_code=400, detail="Maximum of 3 images allowed")
     
     image_bytes_list = []
+    mime_types = []
     for img in images:
         if not img.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="Uploaded files must be images")
         content = await img.read()
         image_bytes_list.append(content)
-        
-    name = service.extract_product_from_images(image_bytes_list)
-    return schemas.ProductExtractionResponse(name=name)
+        mime_types.append(img.content_type)   # pass real mime: image/jpeg, image/png, image/webp
+
+    products = service.extract_product_from_images(image_bytes_list, mime_types)
+    return schemas.ProductExtractionResponse(names=[p["name"] for p in products])
