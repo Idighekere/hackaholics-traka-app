@@ -150,13 +150,13 @@ export function LandingPage() {
         </section>
 
         {/*
-          Product image section — temporarily commented out.
-          TODO: replace this placeholder with a real product image — a photo of a
-          Nigerian micro-SME using Traka, or a clean screenshot of the app
-          dashboard. Drop the file in /public (e.g. /public/landing-hero.jpg)
-          and swap the block below for:
-          <img src="/landing-hero.jpg" alt="..." className="w-full rounded-3xl shadow-card object-cover" />
-        */}
+           Product image section — temporarily commented out.
+           TODO: replace this placeholder with a real product image — a photo of a
+           Nigerian micro-SME using Traka, or a clean screenshot of the app
+           dashboard. Drop the file in /public (e.g. /public/landing-hero.jpg)
+           and swap the block below for:
+           <img src="/landing-hero.jpg" alt="..." className="w-full rounded-3xl shadow-card object-cover" />
+         */}
 
         <section className="mx-auto max-w-[1400px] px-6 pb-20 pt-16 md:px-12">
           <div>
@@ -185,6 +185,32 @@ export function LandingPage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </section>
+
+        {/* Pitch Deck CTA Section */}
+        <section className="mx-auto max-w-[1400px] px-6 pb-20 pt-16 md:px-12">
+          <div className="text-center">
+            <h3 className="text-balance font-display text-2xl font-bold tracking-tight text-slate-900 mb-6">
+              See Our Vision
+            </h3>
+            <p className="max-w-prose mx-auto mb-8 text-base leading-relaxed text-slate-600">
+              Discover how Traka is transforming bookkeeping for African micro-SMEs. Download our pitch deck to learn about our mission, technology, and impact.
+            </p>
+            <motion.div {...fadeUp(0.16)} className="inline-block">
+              <a
+                href="/Pitch Deck 1.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "rounded-xl border border-primary/30 px-8 py-3.5 text-sm font-bold text-primary transition-colors hover:bg-primary/5 active:scale-[0.98]",
+                  focusRing(),
+                )}
+              >
+                View Pitch Deck
+                <ArrowRight weight="bold" className="h-4 w-4 ml-2" />
+              </a>
+            </motion.div>
           </div>
         </section>
       </div>
