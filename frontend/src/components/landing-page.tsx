@@ -188,7 +188,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Pitch Deck CTA Section */}
+        {/* Pitch Deck Section */}
         <section className="mx-auto max-w-[1400px] px-6 pb-20 pt-16 md:px-12">
           <div className="text-center">
             <h3 className="text-balance font-display text-2xl font-bold tracking-tight text-slate-900 mb-6">
@@ -197,6 +197,16 @@ export function LandingPage() {
             <p className="max-w-prose mx-auto mb-8 text-base leading-relaxed text-slate-600">
               Discover how Traka is transforming bookkeeping for African micro-SMEs. Download our pitch deck to learn about our mission, technology, and impact.
             </p>
+            {/* Embed the PDF */}
+            <div className="relative w-full h-[600px] mb-6">
+              <embed
+                src="/Pitch Deck 1.pdf"
+                type="application/pdf"
+                width="100%"
+                height="100%"
+              />
+            </div>
+            {/* Optional: keep a download link */}
             <motion.div {...fadeUp(0.16)} className="inline-block">
               <a
                 href="/Pitch Deck 1.pdf"
@@ -207,7 +217,7 @@ export function LandingPage() {
                   focusRing(),
                 )}
               >
-                View Pitch Deck
+                Download PDF
                 <ArrowRight weight="bold" className="h-4 w-4 ml-2" />
               </a>
             </motion.div>
