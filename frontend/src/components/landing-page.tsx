@@ -217,8 +217,10 @@ export function LandingPage() {
                   focusRing(),
                 )}
               >
-                Download PDF
-                <ArrowRight weight="bold" className="h-4 w-4 ml-2" />
+                <span className="flex items-center gap-2">
+                  Download PDF
+                  <ArrowRight weight="bold" className="h-4 w-4" />
+                </span>
               </a>
             </motion.div>
           </div>
