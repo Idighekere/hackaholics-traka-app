@@ -213,14 +213,12 @@ export function LandingPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "rounded-xl border border-primary/30 px-8 py-3.5 text-sm font-bold text-primary transition-colors hover:bg-primary/5 active:scale-[0.98]",
+                  "inline-flex items-center gap-2 rounded-xl border border-primary/30 px-8 py-3.5 text-sm font-bold text-primary transition-colors hover:bg-primary/5 active:scale-[0.98]",
                   focusRing(),
                 )}
               >
-                <span className="flex items-center gap-2">
-                  Download PDF
-                  <ArrowRight weight="bold" className="h-4 w-4" />
-                </span>
+                Download PDF
+                <ArrowRight weight="bold" className="h-4 w-4 shrink-0" />
               </a>
             </motion.div>
           </div>
